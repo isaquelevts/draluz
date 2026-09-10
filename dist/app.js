@@ -1,4 +1,110 @@
 const whatsappNumber = '';
+const track = document.querySelector('#testimonial-track');
+const prevReview = document.querySelector('.carousel-prev');
+const nextReview = document.querySelector('.carousel-next');
+
+const reviewCards = [...track.querySelectorAll('.testimonial')];
+const reviewCount = reviewCards.length;
+reviewCards.forEach((card, i) => {
+  card.setAttribute('role', 'group');
+  card.setAttribute('aria-roledescription', 'slide');
+  card.setAttribute('aria-label', `${i + 1} de ${reviewCount}`);
+});
+function cloneReviews() {
+  const fragment = document.createDocumentFragment();
+  reviewCards.forEach(card => {
+    const clone = card.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    fragment.append(clone);
+  });
+  return fragment;
+}
+track.prepend(cloneReviews());
+track.append(cloneReviews());
+let reviewIndex = reviewCount;
+let reviewStep = 0;
+let settleTimer;
+let reviewMoving = false;
+const reviewQueue = [];
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+function reviewOffset(index) {
+  const cards = track.children;
+  return cards[index].offsetLeft - cards[0].offsetLeft;
+}
+
+function finishReviewMove() {
+  clearTimeout(settleTimer);
+  reviewIndex = Math.round(track.scrollLeft / reviewStep);
+  const normalized = reviewCount + ((reviewIndex % reviewCount) + reviewCount) % reviewCount;
+  if (normalized !== reviewIndex) {
+    reviewIndex = normalized;
+    track.scrollTo({ left: reviewOffset(reviewIndex), behavior: 'instant' });
+  }
+  reviewMoving = false;
+
+  if (reviewQueue.length) moveReview(reviewQueue.shift());
+}
+function moveReview(direction) {
+  if (!reviewStep) return;
+  if (reviewMoving) { reviewQueue.push(direction); return; }
+  reviewIndex = Math.round(track.scrollLeft / reviewStep) + direction;
+  reviewMoving = true;
+  track.scrollTo({ left: reviewOffset(reviewIndex), behavior: reducedMotion.matches ? 'instant' : 'smooth' });
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(finishReviewMove, reducedMotion.matches ? 30 : 180);
+
+}
+prevReview.disabled = false;
+nextReview.disabled = false;
+prevReview.addEventListener('click', () => moveReview(-1));
+nextReview.addEventListener('click', () => moveReview(1));
+track.addEventListener('scroll', () => {
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(finishReviewMove, 140);
+}, { passive: true });
+track.addEventListener('keydown', event => {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    moveReview(event.key === 'ArrowRight' ? 1 : -1);
+  }
+});
+function sizeReviews() {
+  clearTimeout(settleTimer);
+  reviewQueue.length = 0;
+  reviewMoving = false;
+  reviewIndex = reviewCount + ((reviewIndex % reviewCount) + reviewCount) % reviewCount;
+  reviewStep = reviewOffset(1);
+  track.scrollTo({ left: reviewOffset(reviewIndex), behavior: 'instant' });
+
+}
+new ResizeObserver(sizeReviews).observe(track);
+sizeReviews();
+const reviewSection = document.querySelector('#depoimentos');
+
+let autoplayTimer;
+let autoplayPaused = reducedMotion.matches;
+let pointerOverReviews = false;
+function scheduleReviews() {
+  clearInterval(autoplayTimer);
+  if (autoplayPaused || pointerOverReviews || document.hidden || reviewSection.contains(document.activeElement)) return;
+  autoplayTimer = setInterval(() => {
+    if (!reviewMoving && !reviewQueue.length) moveReview(1);
+  }, 4000);
+}
+
+
+reviewSection.addEventListener('pointerenter', event => {
+  if (event.pointerType === 'mouse') { pointerOverReviews = true; scheduleReviews(); }
+});
+reviewSection.addEventListener('pointerleave', () => { pointerOverReviews = false; scheduleReviews(); });
+reviewSection.addEventListener('focusin', scheduleReviews);
+reviewSection.addEventListener('focusout', () => setTimeout(scheduleReviews, 0));
+track.addEventListener('touchstart', () => clearInterval(autoplayTimer), { passive: true });
+track.addEventListener('touchend', scheduleReviews, { passive: true });
+document.addEventListener('visibilitychange', scheduleReviews);
+reducedMotion.addEventListener('change', () => { autoplayPaused = reducedMotion.matches;  scheduleReviews(); });
+
+scheduleReviews();
 const symptoms=['Feridas que demoram para cicatrizar','Feridas abertas por semanas ou meses','Feridas que não apresentam boa evolução','Dificuldades no processo de cicatrização','Feridas que exigem cuidados especializados','Cicatrizes que causam incômodo estético'];
 document.querySelector('#symptoms').innerHTML=symptoms.map(t=>`<div class="symptom"><span class="icon">✧</span>${t}</div>`).join('');
 const treatments=[['Feridas de difícil cicatrização','Feridas que apresentam dificuldade para evoluir e necessitam de acompanhamento especializado.'],['Feridas crônicas','Casos que permanecem por períodos prolongados e exigem avaliação cuidadosa e uma estratégia individualizada.'],['Dificuldades na cicatrização','Situações em que diferentes fatores podem interferir na recuperação da pele e dos tecidos.'],['Feridas pós-operatórias','Cuidados especializados para acompanhar o processo de cicatrização após procedimentos.'],['Cicatrizes','Acompanhamento voltado à recuperação e também à estética da cicatriz.']];
