@@ -21,6 +21,17 @@ Abra http://localhost:4173 no navegador.
 
 O site é estático e não exige instalação de dependências ou compilação. Para hospedagem estática, use `dist` como diretório de publicação.
 
+## Publicar na Vercel
+
+1. Na Vercel, escolha **Add New → Project** e importe `isaquelevts/draluz`.
+2. Mantenha **Root Directory** na raiz do repositório (`./`).
+3. O arquivo `vercel.json` configura o projeto como **Other**, sem instalação ou compilação, com saída em `dist`.
+4. Clique em **Deploy**.
+
+Se o projeto já estiver importado, confira a pasta raiz e faça um novo deploy da branch `main`. Não são necessárias variáveis de ambiente.
+
+Referência: https://vercel.com/docs/project-configuration/vercel-json
+
 ## Agendamento
 
 O WhatsApp ainda precisa ser configurado. Preencha `whatsappNumber` em `dist/app.js` com o código do país, DDD e número, usando somente dígitos.
