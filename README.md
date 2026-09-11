@@ -34,4 +34,4 @@ Referência: https://vercel.com/docs/project-configuration/vercel-json
 
 ## Agendamento
 
-O WhatsApp ainda precisa ser configurado. Preencha `whatsappNumber` em `dist/app.js` com o código do país, DDD e número, usando somente dígitos.
+Os links de agendamento em `dist/index.html` abrem diretamente o WhatsApp informado: +55 (61) 8175-7514. Atendimento domiciliar em Brasília–DF.
