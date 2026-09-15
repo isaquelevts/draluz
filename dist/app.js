@@ -120,4 +120,24 @@ const leadDialog=document.querySelector('#lead-dialog');
 document.querySelectorAll('a.btn').forEach(button=>button.addEventListener('click',event=>{if(button.closest('#lead-dialog'))return;event.preventDefault();leadDialog.showModal();document.querySelector('#lead-name').focus()}));
 document.querySelector('.close').addEventListener('click',()=>leadDialog.close());
 leadDialog.addEventListener('click',event=>{if(event.target===leadDialog)leadDialog.close()});
-document.querySelector('#lead-form').addEventListener('submit',event=>{event.preventDefault();window.location.href='/obrigado'});
+const leadForm=document.querySelector('#lead-form');
+leadForm.method='post';leadForm.action='/api/leads';
+const consentLabel=document.createElement('label');
+consentLabel.style.cssText='display:flex;gap:10px;align-items:flex-start;font-weight:400';
+const consent=document.createElement('input');consent.type='checkbox';consent.required=true;consent.name='consent';consent.style.cssText='width:18px;flex:0 0 18px;margin-top:4px';
+consentLabel.append(consent,document.createTextNode('Autorizo o armazenamento destes dados e o contato da equipe da Dra. Luz Marina sobre minha solicitação.'));
+leadForm.insertBefore(consentLabel,leadForm.querySelector('button[type="submit"]'));
+const leadError=document.createElement('p');leadError.setAttribute('role','alert');leadForm.append(leadError);
+let requestId=crypto.randomUUID();
+leadForm.addEventListener('submit',async event=>{
+  event.preventDefault();if(!leadForm.reportValidity())return;
+  const submit=leadForm.querySelector('button[type="submit"]');submit.disabled=true;leadError.textContent='';
+  try{
+    const values=Object.fromEntries(new FormData(leadForm));
+    const response=await fetch('/api/leads',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...values,consent:consent.checked,requestId})});
+    const result=await response.json();
+    if(!response.ok||!result.ok)throw Error(result.error||'Não foi possível salvar seus dados.');
+    location.assign('/obrigado');
+  }catch(error){leadError.textContent='Não conseguimos enviar agora. Seus dados continuam no formulário. Tente novamente ou fale pelo WhatsApp.';
+    const link=document.createElement('a');link.href='https://wa.me/556181757514';link.textContent=' Falar pelo WhatsApp';link.target='_blank';link.rel='noopener noreferrer';leadError.append(link);submit.disabled=false;}
+});
