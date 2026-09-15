@@ -52,8 +52,9 @@ module.exports = async (req,res) => {
       const password = String(body.password || '');
       if (!/^[a-zA-Z0-9_.@-]{3,80}$/.test(username) || password.length < 12 || password.length > 128) return send(400,{error:'Use um usuário com 3 a 80 caracteres e senha com 12 a 128 caracteres.'});
       if (action === 'setup') {
-        const setupToken = process.env.ADMIN_SETUP_TOKEN;
-        if (!setupToken || setupToken.length < 32 || !equal(body.setupToken,setupToken)) return send(403,{error:'Chave de configuração inválida.'});
+        const setupToken = String(process.env.ADMIN_SETUP_TOKEN || '').trim();
+        const submittedSetupToken = String(body.setupToken || '').trim();
+        if (setupToken.length < 32 || !equal(submittedSetupToken,setupToken)) return send(403,{error:'Chave de configuração inválida.'});
         const salt = crypto.randomBytes(16).toString('hex');
         const derived = (await scrypt(password,salt,64)).toString('hex');
         const created = await db('SET',PREFIX+'admin',JSON.stringify({username,salt,password:derived}),'NX');
