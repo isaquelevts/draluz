@@ -25,6 +25,15 @@ async function session(req) {
   const token = (req.headers.cookie || '').split(';').map(s=>s.trim()).find(s=>s.startsWith('draluz_session='))?.slice(15);
   return token && /^[a-f0-9]{64}$/.test(token) && await db('GET',PREFIX+'session:'+hash(token));
 }
+async function bootstrapAdmin() {
+  const username = String(process.env.ADMIN_USERNAME || '').trim();
+  const password = String(process.env.ADMIN_PASSWORD || '');
+  if (!username || password.length < 12 || !/^[a-zA-Z0-9_.@-]{3,80}$/.test(username)) return false;
+  const salt = crypto.randomBytes(16).toString('hex');
+  const derived = (await scrypt(password,salt,64)).toString('hex');
+  await db('SET',PREFIX+'admin',JSON.stringify({username,salt,password:derived}),'NX');
+  return true;
+}
 function cookie(res,token,age) {
   res.setHeader('Set-Cookie',`draluz_session=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${age}`);
 }
@@ -44,7 +53,9 @@ module.exports = async (req,res) => {
     const action = req.query?.action || '';
     if (action === 'session' && req.method === 'GET') {
       const user = await session(req);
-      return send(200,{authenticated:Boolean(user),username:user || null,setupRequired:!(await db('GET',PREFIX+'admin'))});
+      let admin = await db('GET',PREFIX+'admin');
+      if (!admin) { await bootstrapAdmin(); admin = await db('GET',PREFIX+'admin'); }
+      return send(200,{authenticated:Boolean(user),username:user || null,setupRequired:!admin});
     }
     if (['setup','login'].includes(action) && req.method === 'POST') {
       if (await limited(req,'login',15)) return send(429,{error:'Muitas tentativas. Aguarde 15 minutos.'});
