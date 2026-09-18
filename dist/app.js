@@ -145,3 +145,10 @@ leadForm.addEventListener('submit',async event=>{
   }catch(error){leadError.textContent='Não conseguimos enviar agora. Seus dados continuam no formulário. Tente novamente ou fale pelo WhatsApp.';
     const link=document.createElement('a');link.href='https://wa.me/556181757514';link.textContent=' Falar pelo WhatsApp';link.target='_blank';link.rel='noopener noreferrer';leadError.append(link);submit.disabled=false;}
 });
+const whatsappFloat=document.createElement('a');
+whatsappFloat.className='whatsapp-float';
+whatsappFloat.href='https://wa.me/556181757514?text=Ol%C3%A1%2C%20vi%20o%20site%20da%20Dra.%20Luz%20Marina%20e%20gostaria%20de%20agendar%20uma%20avalia%C3%A7%C3%A3o.';
+whatsappFloat.target='_blank';whatsappFloat.rel='noopener noreferrer';whatsappFloat.textContent='Falar pelo WhatsApp';
+function gtag_report_conversion(url){const callback=()=>{if(url)window.open(url,'_blank','noopener')};if(typeof gtag==='function')gtag('event','conversion',{send_to:'AW-18451415875/5W4YCPSApfwcEMOGqd5E',value:1.0,currency:'BRL',event_callback:callback});else callback();return false}
+whatsappFloat.addEventListener('click',event=>{event.preventDefault();gtag_report_conversion(whatsappFloat.href)});
+document.body.append(whatsappFloat);
