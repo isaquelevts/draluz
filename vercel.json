@@ -5,5 +5,13 @@
   "installCommand": "",
   "outputDirectory": "dist",
   "trailingSlash": true,
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "draluz.vercel.app" }],
+      "destination": "https://www.draluzmarinacicatriza.com.br/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/obrigado/", "destination": "/obrigado.html" }, { "source": "/painel/", "destination": "/painel.html" }]
 }
