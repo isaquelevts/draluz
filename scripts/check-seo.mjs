@@ -38,8 +38,8 @@ for(const file of files){
   }
 }
 const home=fs.readFileSync(path.join(dist,'index.html'),'utf8');
-const hero=home.indexOf('class="hero"'),testimonials=home.indexOf('class="content testimonials"'),stats=home.indexOf('class="stats"');
-if(!(hero>=0&&hero<testimonials&&testimonials<stats))errors.push('Página inicial: depoimentos devem vir imediatamente após a primeira seção');
+const hero=home.indexOf('class="hero"'),testimonials=home.indexOf('class="content testimonials"'),treatments=home.indexOf('id="tratamentos"'),stats=home.indexOf('class="stats"');
+if(!(hero>=0&&hero<testimonials&&testimonials<treatments&&treatments<stats))errors.push('Página inicial: depoimentos e tratamentos devem vir após a primeira seção, nessa ordem');
 for(const name of ['robots.txt','sitemap.xml','llms.txt'])if(!fs.existsSync(path.join(dist,name)))errors.push(`${name} ausente`);
 for(const name of ['obrigado.html','painel.html'])if(!fs.readFileSync(path.join(dist,name),'utf8').includes('name="robots" content="noindex'))errors.push(`${name}: noindex ausente`);
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1}else console.log(`${files.length} páginas públicas verificadas; links, metadados, sitemap e noindex corretos.`);
