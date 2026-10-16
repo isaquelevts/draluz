@@ -4,13 +4,13 @@ Site em português para atendimento especializado em feridas e cicatrização em
 
 ## Prévia local
 
-Com Python instalado, execute na pasta do projeto:
+Com Node.js instalado, execute na pasta do projeto:
 
 ```sh
-python -m http.server 4173 --directory dist
+node scripts/preview.mjs
 ```
 
-Abra http://localhost:4173 no navegador.
+Abra http://127.0.0.1:4181/ no navegador.
 
 ## Arquivos
 

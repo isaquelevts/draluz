@@ -3,9 +3,11 @@ import path from 'node:path';
 
 const root = path.resolve('dist');
 const origin = 'https://www.draluzmarinacicatriza.com.br';
-const today = '2026-10-14';
+const published = '2026-10-14';
+const today = '2026-10-16';
 const wa = 'https://wa.me/556181757514?text=' + encodeURIComponent('Olá, Dra. Luz Marina! Vi o site e gostaria de conversar sobre uma avaliação.');
 const aliasScript = `<script>if(location.hostname==='draluz.vercel.app')location.replace('${origin}'+location.pathname+location.search+location.hash)</script>`;
+const deferredClarity=`<script>addEventListener('load',()=>{const start=()=>{(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src='https://www.clarity.ms/tag/'+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,'clarity','script','yk9p4j7pmv')};if('requestIdleCallback'in window)requestIdleCallback(start,{timeout:1500});else setTimeout(start,600)},{once:true})</script>`;
 const refs = {
   diabetes: ['Ministério da Saúde — complicações do diabetes', 'https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/d/diabetes/complicacoes'],
   manual: ['Ministério da Saúde — Manual do Pé Diabético', 'https://www.gov.br/saude/pt-br/centrais-de-conteudo/publicacoes/guias-e-manuais/2016/manual-do-pe-diabetico.pdf'],
@@ -19,6 +21,16 @@ const refs = {
 const esc = s => String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const link = (url, label) => `<a href="${esc(url)}">${esc(label)}</a>`;
 const list = arr => `<ul>${arr.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+function responsiveImages(html) {
+  return html.replace(/<img\b[^>]*>/g, tag=>{
+    if(tag.includes('srcset='))return tag;
+    const match=tag.match(/src="\/?images\/([^"/]+)\.webp"/);
+    if(!match)return tag;
+    const name=match[1];
+    const sizes=tag.includes('seo-cover')?'(max-width: 720px) calc(100vw - 28px), (max-width: 1000px) 90vw, 960px':'(max-width: 720px) calc(100vw - 52px), (max-width: 1000px) 45vw, 30vw';
+    return tag.replace(match[0],`${match[0]} srcset="/images/${name}-768.webp 768w, /images/${name}.webp 1536w" sizes="${sizes}"`);
+  });
+}
 
 const services = [
   {slug:'pe-diabetico',title:'Pé diabético: avaliação de feridas em Brasília',h1:'Cuidados com feridas no pé de pessoas com diabetes',intro:'Uma alteração no pé merece atenção, mesmo quando parece pequena ou causa pouca dor. A avaliação considera a ferida, a pele ao redor e as condições de saúde da pessoa.',image:'pe-diabetico-curativo.jpg',imageAlt:'Ilustração de avaliação e curativo no pé',sections:[['Quando buscar avaliação',['Ferida, bolha, mudança de cor ou secreção no pé devem ser avaliadas por um profissional.','Pessoas com diabetes podem apresentar alterações de sensibilidade e circulação. Por isso, esperar a dor aparecer não é uma forma segura de acompanhar o problema.']],['Como é definido o cuidado',['A equipe avalia as características da ferida e a necessidade de curativo, proteção e acompanhamento. O controle do diabetes e a avaliação de circulação também fazem parte do cuidado integrado.','A indicação de qualquer recurso complementar depende da avaliação individual. Não há prazo de cicatrização igual para todas as pessoas.']]],bullets:['Observe diariamente os pés e comunique novas alterações à equipe de saúde.','Não aplique produtos ou faça cortes na lesão sem orientação profissional.','Se houver piora rápida, febre ou sinais de infecção, procure assistência de saúde prontamente.'],ref:['manual','diabetes'],related:['lesao-por-pressao','atendimento'],articles:['cuidados-com-pe-diabetico','quando-avaliar-ferida-que-nao-cicatriza']},
@@ -46,7 +58,7 @@ const articles = [
 function page({slug,title,description,h1,eyebrow,body,image,kind='WebPage'}) {
   const url = `${origin}/${slug}/`;
   const graph = [{ '@context':'https://schema.org','@type':kind, name:title, headline:h1, description, url, inLanguage:'pt-BR', dateModified:today }];
-  if (kind === 'Article') graph[0].datePublished = today;
+  if (kind === 'Article') graph[0].datePublished = published;
   if (slug === 'sobre-dra-luz-marina') graph.push({'@context':'https://schema.org','@type':'Person',name:'Luz Marina Alfonso Dutra',jobTitle:'Enfermeira dermatológica',identifier:'COREN-DF 77.694-ENF',image:`${origin}/dra-luz-marina.jpeg`,url,areaServed:'Brasília, DF'});
   if (services.some(s=>s.slug===slug)&&!['sobre-dra-luz-marina','atendimento'].includes(slug)) graph.push({'@context':'https://schema.org','@type':'Service',name:h1,areaServed:'Brasília, DF',provider:{'@type':'Person',name:'Luz Marina Alfonso Dutra',jobTitle:'Enfermeira dermatológica'}});
   const structured = JSON.stringify(graph).replaceAll('<','\\u003c');
@@ -56,11 +68,11 @@ function page({slug,title,description,h1,eyebrow,body,image,kind='WebPage'}) {
 function sources(keys) { if (!keys.length) return ''; return `<section class="seo-sources"><h2>Fontes para saber mais</h2><ul>${keys.map(key=>`<li><a href="${refs[key][1]}" target="_blank" rel="noopener noreferrer">${esc(refs[key][0])} ↗</a></li>`).join('')}</ul></section>`; }
 function more(paths, label) { return `<section class="seo-related"><h2>${esc(label)}</h2><div class="seo-links">${paths.map(p=>{const item=services.find(x=>x.slug===p)||articles.find(x=>x.slug===p);return link(`${articles.includes(item)?'/blog/':'/'}${p}/`,item?.h1||item?.title||p)}).join('')}</div></section>`; }
 function cta(label='Conversar sobre uma avaliação') { return `<aside class="seo-cta"><h2>Precisa de orientação para o seu caso?</h2><p>Conte brevemente a sua necessidade e consulte disponibilidade de atendimento em Brasília.</p><a class="btn whatsapp" href="${wa}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a></aside>`; }
-function write(slug, html) {const folder=path.join(root,...slug.split('/'));fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,'index.html'),html.replace('<head>',`<head>${aliasScript}`),'utf8');}
+function write(slug, html) {const folder=path.join(root,...slug.split('/'));fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,'index.html'),responsiveImages(html.replace('<head>',`<head>${aliasScript}`).replace(/<script>\(function\(c,l,a,r,i,t,y\)\{[\s\S]*?<\/script>/,deferredClarity)),'utf8');}
 
 for (const s of services) {
   const body=`<p class="seo-lead">${esc(s.intro)}</p>${s.slug==='sobre-dra-luz-marina'?'<p><strong>Registro profissional:</strong> COREN-DF 77.694-ENF.</p>':''}${s.sections.map(([h,paragraphs])=>`<section><h2>${esc(h)}</h2>${paragraphs.map(p=>`<p>${esc(p)}</p>`).join('')}</section>`).join('')}<section><h2>Pontos para lembrar</h2>${list(s.bullets)}</section>${cta()}${more(s.articles,'Leituras relacionadas')}${more(s.related,'Outros atendimentos')}${sources(s.ref)}<p class="seo-disclaimer">Conteúdo informativo. Não substitui avaliação clínica nem orientação da equipe de saúde que acompanha a pessoa.</p>`;
-  write(s.slug,page({slug:s.slug,title:s.title,description:s.intro,h1:s.h1,eyebrow:'Atendimento em Brasília',body,image:s.image.startsWith('../')?'/dra-luz-marina.jpeg':`/images/${s.image}`}));
+  write(s.slug,page({slug:s.slug,title:s.title,description:s.intro,h1:s.h1,eyebrow:'Atendimento em Brasília',body,image:s.image.startsWith('../')?'/dra-luz-marina.jpeg':`/images/${s.image.replace('.jpg','.webp')}`}));
 }
 for (const a of articles) {
   const slug=`blog/${a.slug}`;
@@ -78,6 +90,10 @@ fs.writeFileSync(path.join(root,'llms.txt'),`# Dra. Luz Marina Alfonso Dutra\n\n
 const homepagePath=path.join(root,'index.html');
 let home=fs.readFileSync(homepagePath,'utf8');
 if(!home.includes("location.hostname==='draluz.vercel.app'"))home=home.replace('<head>',`<head>${aliasScript}`);
+const testimonials=home.match(/<section class="content testimonials"[\s\S]*?<\/section>/)?.[0];
+if(!testimonials)throw Error('Seção de depoimentos não encontrada');
+home=home.replace(testimonials,'');
+home=home.replace('<div class="stats">',`${testimonials}<div class="stats">`);
 const symptoms=['Feridas que demoram para cicatrizar','Feridas abertas por semanas ou meses','Feridas que não apresentam boa evolução','Dificuldades no processo de cicatrização','Feridas que exigem cuidados especializados','Cicatrizes que causam incômodo estético'];
 const homeTreatments=[['Pé diabético','Avaliação e acompanhamento de feridas nos pés de pessoas com diabetes, com cuidado individualizado.','pe-diabetico-curativo.jpg','pe-diabetico'],['Úlceras venosas e arteriais','Avaliação das características da ferida e das necessidades de cuidado, considerando a importância do acompanhamento vascular.','ulceras.jpg','atendimento'],['Lesões por pressão (escaras)','Cuidados com feridas relacionadas à pressão sobre a pele, com orientação ao paciente e a quem cuida.','escaras.jpg','lesao-por-pressao'],['Feridas pós-operatórias e deiscências','Acompanhamento de feridas após cirurgias, incluindo casos em que ocorre abertura da incisão.','pos-operatorio.jpg','feridas-pos-operatorias'],['Feridas de difícil cicatrização','Avaliação de feridas que permanecem abertas ou não apresentam boa evolução, para definir o plano de cuidado.','cicatrizacao-dra-luz.jpg','atendimento'],['Estética de cicatrizes','Avaliação da cicatriz e de possibilidades de cuidado com sua aparência, incluindo camuflagem paramédica quando indicada.','cicatrizes.jpg','cicatrizes']];
 const resources=[['Laserterapia','Recurso terapêutico utilizado conforme a avaliação profissional e as necessidades específicas do processo de cuidado e cicatrização.'],['Ozonioterapia','Abordagem utilizada dentro de uma estratégia individualizada, conforme indicação e avaliação de cada caso.'],['Plasma rico em plaquetas (PRP)','Recurso que pode integrar o plano de cuidado de feridas, conforme avaliação e indicação profissional para cada caso.'],['Matriz de fibrina','Recurso aplicado em situações específicas como parte da abordagem voltada ao processo de reparação tecidual.'],['Camuflagem paramédica','Técnica voltada à estética da cicatriz, buscando melhorar sua aparência e proporcionar maior harmonia visual à pele.'],['Curativos especializados','Seleção da abordagem e dos cuidados adequados às características e necessidades de cada ferida.']];
@@ -104,7 +120,11 @@ const homeLinks=`<section class="home-seo-links" aria-labelledby="home-seo-title
 home=home.replace(/<section class="home-seo-links"[^>]*>.*?<\/section>/gs,'');
 home=home.replace('<footer>',`${homeLinks}<footer>`);
 home=home.replace('Enfermeira especialista em feridas · Brasília – DF','Enfermeira especialista em feridas · COREN-DF 77.694-ENF · Brasília – DF');
-fs.writeFileSync(homepagePath,home,'utf8');
+home=home.replaceAll(/(src="\/?images\/[^"?]+)\.jpg(?=")/g,'$1.webp');
+home=home.replace(/<script>\(function\(c,l,a,r,i,t,y\)\{[\s\S]*?<\/script>/,deferredClarity);
+home=home.replace(/<dialog class="lead-dialog"[\s\S]*?<\/dialog>/,'');
+home=home.replace('<script src="app.js?v=leads-painel-14"></script>','<script src="/app.js?v=seo-reviews-2" defer></script>');
+fs.writeFileSync(homepagePath,responsiveImages(home),'utf8');
 const thanksPath=path.join(root,'obrigado.html');
 let thanks=fs.readFileSync(thanksPath,'utf8');
 if(!thanks.includes('name="robots"'))thanks=thanks.replace('<head>','<head><meta name="robots" content="noindex,nofollow">');

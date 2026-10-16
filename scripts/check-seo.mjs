@@ -27,10 +27,19 @@ for(const file of files){
     const local=path.join(dist,target.slice(1));
     if(!fs.existsSync(local)&&!fs.existsSync(path.join(local,'index.html')))errors.push(`${relative}: link interno inexistente ${target}`);
   }
+  for(const match of html.matchAll(/srcset="([^"]+)"/g)){
+    for(const candidate of match[1].split(',')){
+      const source=candidate.trim().split(/\s+/)[0];
+      if(source.startsWith('/')&&!fs.existsSync(path.join(dist,source.slice(1))))errors.push(`${relative}: imagem responsiva inexistente ${source}`);
+    }
+  }
   for(const script of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)){
     try{JSON.parse(script[1])}catch{errors.push(`${relative}: JSON-LD inválido`)}
   }
 }
+const home=fs.readFileSync(path.join(dist,'index.html'),'utf8');
+const hero=home.indexOf('class="hero"'),testimonials=home.indexOf('class="content testimonials"'),stats=home.indexOf('class="stats"');
+if(!(hero>=0&&hero<testimonials&&testimonials<stats))errors.push('Página inicial: depoimentos devem vir imediatamente após a primeira seção');
 for(const name of ['robots.txt','sitemap.xml','llms.txt'])if(!fs.existsSync(path.join(dist,name)))errors.push(`${name} ausente`);
 for(const name of ['obrigado.html','painel.html'])if(!fs.readFileSync(path.join(dist,name),'utf8').includes('name="robots" content="noindex'))errors.push(`${name}: noindex ausente`);
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1}else console.log(`${files.length} páginas públicas verificadas; links, metadados, sitemap e noindex corretos.`);

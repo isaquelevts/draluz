@@ -5,5 +5,10 @@
   "installCommand": "",
   "outputDirectory": "dist",
   "trailingSlash": true,
+  "headers": [
+    { "source": "/images/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }] },
+    { "source": "/fonts/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }] },
+    { "source": "/dra-luz-marina.jpeg", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, s-maxage=86400" }] }
+  ],
   "rewrites": [{ "source": "/obrigado/", "destination": "/obrigado.html" }, { "source": "/painel/", "destination": "/painel.html" }]
 }
